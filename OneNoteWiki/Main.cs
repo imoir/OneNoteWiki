@@ -140,6 +140,7 @@
                             fname = m_imageNames[fname];
                             string filename = Path.Combine(this.TextBoxExportDirectory.Text, fname);
                             this.TextBoxLog.AppendText(String.Format("part FileName : {0}\n", filename));
+                            new FileInfo(filename).Directory.Create();
                             using (var stream = File.Create(filename))
                             {
                                 part.Content.DecodeTo(stream);
@@ -175,6 +176,7 @@
             htmlBuilder.AppendLine(" </body>");
             htmlBuilder.AppendLine("</html>");
             string filepath = Path.Combine(this.TextBoxExportDirectory.Text, filename);
+            new FileInfo(filepath).Directory.Create();
             using (FileStream stream = File.Create(filepath))
             {
                 byte[] fileContents = new UTF8Encoding(true).GetBytes(htmlBuilder.ToString());
@@ -235,6 +237,7 @@
             contentsPageBuilder.AppendLine("</html>");
             string sectionFilename = TextBoxRootName.Text + TextBoxDivider.Text + TextBoxNotebookName.Text + TextBoxDivider.Text + m_sectionName + ".html";
             string filepath = Path.Combine(this.TextBoxExportDirectory.Text, sectionFilename);
+            new FileInfo(filepath).Directory.Create();
             using (FileStream stream = File.Create(filepath))
             {
                 byte[] fileContents = new UTF8Encoding(true).GetBytes(contentsPageBuilder.ToString());
