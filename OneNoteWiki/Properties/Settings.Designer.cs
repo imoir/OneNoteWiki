@@ -61,25 +61,37 @@ namespace OneNoteWiki.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Knowledge")]
-        public string NotebookName {
-            get {
-                return ((string)(this["NotebookName"]));
-            }
-            set {
-                this["NotebookName"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("!")]
+        [global::System.Configuration.DefaultSettingValueAttribute("/")]
         public string Divider {
             get {
                 return ((string)(this["Divider"]));
             }
             set {
                 this["Divider"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Main_Page|Main Page")]
+        public string Link {
+            get {
+                return ((string)(this["Link"]));
+            }
+            set {
+                this["Link"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("Archives")]
+        public string IgnorePage {
+            get {
+                return ((string)(this["IgnorePage"]));
+            }
+            set {
+                this["IgnorePage"] = value;
             }
         }
     }

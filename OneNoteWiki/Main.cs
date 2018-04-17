@@ -14,6 +14,7 @@
         private List<string> m_pagesNames = new List<string>();
         private string m_sectionName;
         private string m_filenamePrefix;
+        private string m_linkHref;
         private Dictionary<string, string> m_imageNames = new Dictionary<string, string>();
         private List<HtmlPage> m_htmlPageList = new List<HtmlPage>();
 
@@ -23,8 +24,9 @@
             TextBoxMhtmlFile.Text = Properties.Settings.Default.MhtmlFile;
             TextBoxExportDirectory.Text = Properties.Settings.Default.ExportDirectory;
             TextBoxRootName.Text = Properties.Settings.Default.RootName;
-            TextBoxNotebookName.Text = Properties.Settings.Default.NotebookName;
-            TextBoxDivider.Text = Properties.Settings.Default.Divider;
+            TextBoxLink.Text = Properties.Settings.Default.Link;
+            TextBoxIgnorePage.Text = Properties.Settings.Default.IgnorePage;
+            ComboBoxDivider.Text = Properties.Settings.Default.Divider;
             if (TextBoxExportDirectory.Text.Length == 0)
             {
                 TextBoxExportDirectory.Text = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
@@ -36,8 +38,9 @@
             Properties.Settings.Default.MhtmlFile = TextBoxMhtmlFile.Text;
             Properties.Settings.Default.ExportDirectory = TextBoxExportDirectory.Text;
             Properties.Settings.Default.RootName = TextBoxRootName.Text;
-            Properties.Settings.Default.NotebookName = TextBoxNotebookName.Text;
-            Properties.Settings.Default.Divider = TextBoxDivider.Text;
+            Properties.Settings.Default.Link = TextBoxLink.Text;
+            Properties.Settings.Default.IgnorePage = TextBoxIgnorePage.Text;
+            Properties.Settings.Default.Divider = ComboBoxDivider.Text;
             Properties.Settings.Default.Save();
         }
 
@@ -82,9 +85,7 @@
             m_pagesNames.Clear();
             m_imageNames.Clear();
             m_htmlPageList.Clear();
-            FileInfo sectionFileInfo = new FileInfo(this.TextBoxMhtmlFile.Text);
-            m_sectionName = Path.GetFileNameWithoutExtension(sectionFileInfo.Name);
-            m_filenamePrefix = TextBoxRootName.Text + TextBoxDivider.Text + TextBoxNotebookName.Text + TextBoxDivider.Text + m_sectionName + TextBoxDivider.Text;
+            m_filenamePrefix = TextBoxRootName.Text + ComboBoxDivider.Text;
             MimeMessage message = MimeKit.MimeMessage.Load(this.TextBoxMhtmlFile.Text);
             foreach (MimeEntity bodyPart in message.BodyParts)
             {
@@ -128,6 +129,14 @@
                             // Parse the html tree and pick out the pages
                             CreateHtmlPageList(htmlTree);
 
+                            if (m_htmlPageList.Count > 1)
+                            {
+                                // More than one page, assume we are importing a section
+                                FileInfo sectionFileInfo = new FileInfo(this.TextBoxMhtmlFile.Text);
+                                m_sectionName = Path.GetFileNameWithoutExtension(sectionFileInfo.Name);
+                                m_filenamePrefix += m_sectionName + ComboBoxDivider.Text;
+                            }
+
                             CleanupHtmlPages();
                             ExportHtmlPages();
                         }
@@ -162,7 +171,7 @@
             htmlBuilder.AppendLine(" </head>");
             htmlBuilder.AppendLine(" <body>");
             htmlBuilder.AppendLine("  <p>");
-            htmlBuilder.AppendLine("   <a href=\"Main_Page\">Main Page</a>");
+            htmlBuilder.AppendLine(String.Format("   {0}", m_linkHref));
             htmlBuilder.AppendLine("  </p>");
             if (pageNode != null)
             {
@@ -181,6 +190,23 @@
 
         private void ExportHtmlPages()
         {
+            if (TextBoxLink.Text.Length > 0)
+            {
+                int pos = TextBoxLink.Text.IndexOf('|');
+                if (pos < 0)
+                {
+                    m_linkHref = String.Format("<a href=\"{0}\">{0}</a>", TextBoxLink.Text.Trim());
+                }
+                else
+                {
+                    m_linkHref = String.Format("<a href=\"{0}\">{1}</a>", TextBoxLink.Text.Substring(0, pos).Trim(), TextBoxLink.Text.Substring(pos+1).Trim());
+                }
+            }
+            else
+            {
+                m_linkHref = "<a href=\"Main_Page\">Main Page</a>";
+            }
+
             StringBuilder contentsPageBuilder = new StringBuilder();
             contentsPageBuilder.AppendLine("<!DOCTYPE html>");
             contentsPageBuilder.AppendLine("<html>");
@@ -190,7 +216,7 @@
             contentsPageBuilder.AppendLine(" </head>");
             contentsPageBuilder.AppendLine(" <body>");
             contentsPageBuilder.AppendLine("  <p>");
-            contentsPageBuilder.AppendLine("   <a href=\"Main_Page\">Main Page</a>");
+            contentsPageBuilder.AppendLine(String.Format("   {0}", m_linkHref));
             contentsPageBuilder.AppendLine("  </p>");
             contentsPageBuilder.AppendLine("  <p>");
             contentsPageBuilder.AppendLine(String.Format("   Contents of {0}", m_sectionName));
@@ -212,7 +238,7 @@
                     contentsPageBuilder.AppendLine("    <ul>");
                     foreach (HtmlPage subPage in page.SubPages)
                     {
-                        string subPageFilename = pageFilenamePrefix + TextBoxDivider.Text + subPage.PageFilename + ".html";
+                        string subPageFilename = pageFilenamePrefix + ComboBoxDivider.Text + subPage.PageFilename + ".html";
                         ExportPage(subPage.PageContent, subPage.PageName, subPageFilename);
                         contentsPageBuilder.AppendLine("     <li>");
                         contentsPageBuilder.AppendLine(String.Format("      <a href=\"{0}\">{1}</a>", subPageFilename, subPage.PageName));
@@ -223,17 +249,21 @@
                 contentsPageBuilder.AppendLine("    </li>");
             }
 
-            contentsPageBuilder.AppendLine("   </ul>");
-            contentsPageBuilder.AppendLine("  </p>");
-            contentsPageBuilder.AppendLine(" </body>");
-            contentsPageBuilder.AppendLine("</html>");
-            string sectionFilename = TextBoxRootName.Text + TextBoxDivider.Text + TextBoxNotebookName.Text + TextBoxDivider.Text + m_sectionName + ".html";
-            string filepath = Path.Combine(this.TextBoxExportDirectory.Text, sectionFilename);
-            new FileInfo(filepath).Directory.Create();
-            using (FileStream stream = File.Create(filepath))
+            if (m_htmlPageList.Count > 1)
             {
-                byte[] fileContents = new UTF8Encoding(true).GetBytes(contentsPageBuilder.ToString());
-                stream.Write(fileContents, 0, fileContents.Length);
+                // only complete the contents page if more than one page is present
+                contentsPageBuilder.AppendLine("   </ul>");
+                contentsPageBuilder.AppendLine("  </p>");
+                contentsPageBuilder.AppendLine(" </body>");
+                contentsPageBuilder.AppendLine("</html>");
+                string sectionFilename = TextBoxRootName.Text + ComboBoxDivider.Text + m_sectionName + ".html";
+                string filepath = Path.Combine(this.TextBoxExportDirectory.Text, sectionFilename);
+                new FileInfo(filepath).Directory.Create();
+                using (FileStream stream = File.Create(filepath))
+                {
+                    byte[] fileContents = new UTF8Encoding(true).GetBytes(contentsPageBuilder.ToString());
+                    stream.Write(fileContents, 0, fileContents.Length);
+                }
             }
         }
 
@@ -346,7 +376,7 @@
                                         string imageFile = parts[i].Substring(firstQuote + 1, lastQuote - firstQuote - 1);
                                         FileInfo info = new FileInfo(imageFile);
                                         string originalFilename = info.Name;
-                                        string newName = m_filenamePrefix + originalFilename;
+                                        string newName = m_filenamePrefix + Guid.NewGuid().ToString() + '.' + info.Extension;
                                         m_imageNames[originalFilename] = newName;
                                         parts[i] = String.Format("src=\"{0}\"", newName);
                                     }
@@ -386,6 +416,7 @@
             {
                 HtmlNode body = tree.Children[1];
                 int nbspParagraphCount = 0;
+                bool ingnoringPages = false;
                 foreach (HtmlNode nd in body.Children)
                 {
                     if (nd.Tag != null)
@@ -399,8 +430,13 @@
                         }
                         else if (nd.Tag == "div")
                         {
-                            if (nd.Children.Count > 0 && nd.Children[0].Tag != null && nd.Children[0].Tag == "div")
+                            if (ingnoringPages && nbspParagraphCount < 3)
                             {
+                                nbspParagraphCount = 0;
+                            }
+                            else if (nd.Children.Count > 0 && nd.Children[0].Tag != null && nd.Children[0].Tag == "div")
+                            {
+                                ingnoringPages = false;
                                 HtmlNode div1 = nd.Children[0];
                                 if (div1.Children.Count > 0 && div1.Children[0].Tag != null && div1.Children[0].Tag == "div")
                                 {
@@ -429,46 +465,58 @@
                                             {
                                                 pageName = "PageWithNoName";
                                             }
-                                            // Get filename
-                                            string pageFilename = CleanupFilename(pageName, '_');
-                                            // Make sure filename is not already used
-                                            if (m_pagesNames.Contains(pageFilename))
+                                            if (m_htmlPageList.Count == 0 || TextBoxIgnorePage.Text.Length == 0 || pageName != TextBoxIgnorePage.Text)
                                             {
-                                                string newPageFilename;
-                                                int i = 1;
-                                                do
+                                                // Get filename
+                                                string pageFilename = CleanupFilename(pageName, '_');
+                                                // Make sure filename is not already used
+                                                if (m_pagesNames.Contains(pageFilename))
                                                 {
-                                                    newPageFilename = String.Format("{0} ({1})", pageFilename, i);
-                                                    newPageName = String.Format("{0} ({1})", pageName, i);
-                                                    i++;
-                                                } while (m_pagesNames.Contains(newPageFilename));
-                                                pageFilename = newPageFilename;
-                                                pageName = newPageName;
-                                            }
-                                            m_pagesNames.Add(pageFilename);
-                                            HtmlPage newPage = new HtmlPage();
-                                            newPage.PageName = pageName;
-                                            newPage.PageFilename = pageFilename;
-                                            if (div1.Children.Count > 2)
-                                            {
-                                                newPage.PageContent = div1.Children[2];
-                                                newPage.PageContent.Tag = "page";
-                                                newPage.PageContent.Attributes = null;
-                                                if (div1.Children.Count > 3)
-                                                {
-                                                    for ( int i = 3; i < div1.Children.Count; i++)
+                                                    string newPageFilename;
+                                                    int i = 1;
+                                                    do
                                                     {
-                                                        newPage.PageContent.Children.AddRange(div1.Children[i].Children);
+                                                        newPageFilename = String.Format("{0} ({1})", pageFilename, i);
+                                                        newPageName = String.Format("{0} ({1})", pageName, i);
+                                                        i++;
+                                                    } while (m_pagesNames.Contains(newPageFilename));
+                                                    pageFilename = newPageFilename;
+                                                    pageName = newPageName;
+                                                }
+                                                m_pagesNames.Add(pageFilename);
+                                                HtmlPage newPage = new HtmlPage();
+                                                newPage.PageName = pageName;
+                                                newPage.PageFilename = pageFilename;
+                                                if (div1.Children.Count > 2)
+                                                {
+                                                    newPage.PageContent = div1.Children[2];
+                                                    newPage.PageContent.Tag = "page";
+                                                    newPage.PageContent.Attributes = null;
+                                                    if (div1.Children.Count > 3)
+                                                    {
+                                                        for (int i = 3; i < div1.Children.Count; i++)
+                                                        {
+                                                            newPage.PageContent.Children.AddRange(div1.Children[i].Children);
+                                                        }
                                                     }
                                                 }
-                                            }
-                                            if (nbspParagraphCount < 3 && m_htmlPageList.Count > 0)
-                                            {
-                                                m_htmlPageList.Last().SubPages.Add(newPage);
+                                                if (nbspParagraphCount < 3 && m_htmlPageList.Count > 0)
+                                                {
+                                                    m_htmlPageList.Last().SubPages.Add(newPage);
+                                                }
+                                                else
+                                                {
+                                                    m_htmlPageList.Add(newPage);
+                                                }
                                             }
                                             else
                                             {
-                                                m_htmlPageList.Add(newPage);
+                                                // ignore this page ...
+                                                if (nbspParagraphCount > 2)
+                                                {
+                                                    // ... also ignore sub pages
+                                                    ingnoringPages = true;
+                                                }
                                             }
                                             nbspParagraphCount = 0;
                                         }

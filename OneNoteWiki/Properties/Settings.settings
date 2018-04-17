@@ -1,5 +1,5 @@
 ﻿<?xml version='1.0' encoding='utf-8'?>
-<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="mhtml2zip.Properties" GeneratedClassName="Settings">
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="OneNoteWiki.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
     <Setting Name="MhtmlFile" Type="System.String" Scope="User">
@@ -11,11 +11,14 @@
     <Setting Name="RootName" Type="System.String" Scope="User">
       <Value Profile="(Default)">OneNote</Value>
     </Setting>
-    <Setting Name="NotebookName" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Knowledge</Value>
-    </Setting>
     <Setting Name="Divider" Type="System.String" Scope="User">
-      <Value Profile="(Default)">!</Value>
+      <Value Profile="(Default)">/</Value>
+    </Setting>
+    <Setting Name="Link" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Main_Page|Main Page</Value>
+    </Setting>
+    <Setting Name="IgnorePage" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Archives</Value>
     </Setting>
   </Settings>
 </SettingsFile>
