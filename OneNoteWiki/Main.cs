@@ -163,11 +163,6 @@
             htmlBuilder.AppendLine(" <body>");
             htmlBuilder.AppendLine("  <p>");
             htmlBuilder.AppendLine("   <a href=\"Main_Page\">Main Page</a>");
-            htmlBuilder.AppendLine(String.Format("   <a href=\"{0}\">{1}</a>", TextBoxRootName.Text, TextBoxRootName.Text));
-            string notebookAddress = TextBoxRootName.Text + TextBoxDivider.Text + TextBoxNotebookName.Text;
-            htmlBuilder.AppendLine(String.Format("   <a href=\"{0}\">{1}</a>", notebookAddress, TextBoxNotebookName.Text));
-            string sectionAddress = notebookAddress + TextBoxDivider.Text + m_sectionName;
-            htmlBuilder.AppendLine(String.Format("   <a href=\"{0}.html\">{1}</a>", sectionAddress, m_sectionName));
             htmlBuilder.AppendLine("  </p>");
             if (pageNode != null)
             {
@@ -196,9 +191,6 @@
             contentsPageBuilder.AppendLine(" <body>");
             contentsPageBuilder.AppendLine("  <p>");
             contentsPageBuilder.AppendLine("   <a href=\"Main_Page\">Main Page</a>");
-            contentsPageBuilder.AppendLine(String.Format("   <a href=\"{0}\">{1}</a>", TextBoxRootName.Text, TextBoxRootName.Text));
-            string notebookAddress = TextBoxRootName.Text + TextBoxDivider.Text + TextBoxNotebookName.Text;
-            contentsPageBuilder.AppendLine(String.Format("   <a href=\"{0}\">{1}</a>", notebookAddress, TextBoxNotebookName.Text));
             contentsPageBuilder.AppendLine("  </p>");
             contentsPageBuilder.AppendLine("  <p>");
             contentsPageBuilder.AppendLine(String.Format("   Contents of {0}", m_sectionName));
