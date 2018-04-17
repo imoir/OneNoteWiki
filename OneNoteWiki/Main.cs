@@ -376,7 +376,7 @@
                                         string imageFile = parts[i].Substring(firstQuote + 1, lastQuote - firstQuote - 1);
                                         FileInfo info = new FileInfo(imageFile);
                                         string originalFilename = info.Name;
-                                        string newName = m_filenamePrefix + Guid.NewGuid().ToString() + '.' + info.Extension;
+                                        string newName = m_filenamePrefix + Guid.NewGuid().ToString() + info.Extension;
                                         m_imageNames[originalFilename] = newName;
                                         parts[i] = String.Format("src=\"{0}\"", newName);
                                     }
