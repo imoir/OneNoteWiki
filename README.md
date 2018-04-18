@@ -56,10 +56,9 @@ A table of contents would find itself in 'OneNote/NoteBook1/SectionB'.
 
 #### Page Import
 
-If a root name of 'OneNote/Page' is used with a divider of '/'
-and a page file named 'VeryImportantPage.mht' is imported,
-the page 'VeryImportantPage' would find itself in the wiki
-as 'OneNote/NoteBook1/VeryImportantPage'.
+If a root name of 'OneNote/Page' is used with a divider of '/' and a page named
+'Very Important Page' is imported from a file named 'VeryImportantPage.mht',
+the page would find itself in the wiki as 'OneNote/Page/Very Important Page'.
 No table of contents would be generated.
 
 ## License
