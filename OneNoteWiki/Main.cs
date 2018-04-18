@@ -269,8 +269,9 @@
 
         private void CleanupHtmlPage(HtmlNode node)
         {
-            foreach (HtmlNode nd in node.Children)
+            for (int n = 0; n < node.Children.Count; n++)
             {
+                HtmlNode nd = node.Children[n];
                 if (nd.Tag != null)
                 {
                     if (nd.Tag == "p")
@@ -386,6 +387,62 @@
                             nd.Attributes = String.Join(" ", parts);
                         }
                     } // if (nd.Tag == "img")
+                    else if (nd.Tag == "ul")
+                    {
+                        nd.Attributes = null;
+                        if (n > 0 && node.Children[n - 1].Tag != null && node.Children[n - 1].Tag == "li")
+                        {
+                            // OneNote puts embedded lists as a child of <ul> rather than putting them in an <li>
+                            // This code fixes it by putting the list in the previous <li>
+                            HtmlNode newNode = new HtmlNode();
+                            newNode.Tag = "ul";
+                            newNode.Parent = node.Children[n - 1];
+                            newNode.Children.AddRange(nd.Children);
+                            nd.Children.Clear();
+                            newNode.SetChildrensParent();
+                            nd.Tag = "ignore";
+                            CleanupHtmlPage(newNode);
+                            node.Children[n - 1].Children.Add(newNode);
+                            continue;
+                        }
+                        else if (nd.Children.Count > 0 && nd.Children[0].Tag != null && nd.Children[0].Tag == "ul")
+                        {
+                            node.Children.InsertRange(n + 1, nd.Children);
+                            nd.Children.Clear();
+                            node.SetChildrensParent();
+                            nd.Tag = "ignore";
+                            continue;
+                        }
+                    } // if (nd.Tag == "ul")
+                    else if (nd.Tag == "ol")
+                    {
+                        nd.Attributes = null;
+                        if (n > 0 && node.Children[n - 1].Tag != null && node.Children[n - 1].Tag == "li")
+                        {
+                            // OneNote puts embedded lists as a child of <ol> rather than putting them in an <li>
+                            // This code fixes it by putting the list in the previous <li>
+                            HtmlNode newNode = new HtmlNode();
+                            newNode.Tag = "ol";
+                            newNode.Parent = node.Children[n - 1];
+                            newNode.Children.AddRange(nd.Children);
+                            nd.Children.Clear();
+                            newNode.SetChildrensParent();
+                            nd.Tag = "ignore";
+                            CleanupHtmlPage(newNode);
+                            node.Children[n - 1].Children.Add(newNode);
+                            continue;
+                        }
+                    } // if (nd.Tag == "ol")
+                    else if (nd.Tag == "li")
+                    {
+                        nd.Attributes = null;
+                        if (nd.Children.Count == 1 && nd.Content == null && nd.Children[0].Tag != null && nd.Children[0].Tag == "span" && nd.Children[0].Content == null && nd.Children[0].Children.Count == 1 && nd.Children[0].Children[0].Tag == null && nd.Children[0].Children[0].Children.Count == 0 && nd.Children[0].Children[0].Content != null)
+                        {
+                            nd.Children[0].Content = nd.Children[0].Children[0].Content;
+                            nd.Children[0].Tag = null;
+                            nd.Children[0].Attributes = null;
+                        }
+                    } // if (nd.Tag == "li")
                     CleanupHtmlPage(nd);
                 }
             }
@@ -619,7 +676,7 @@
                         AddToHtmlBuilder(nd, htmlBuilder, indent);
                     }
                 }
-                else
+                else if (node.Tag != "ignore")
                 {
                     htmlBuilder.Append(new String(' ', indent));
                     htmlBuilder.Append('<');
@@ -691,6 +748,13 @@
         public string Content { get; set; }
         public List<HtmlNode> Children { get; }
         public HtmlNode Parent { get; set; }
+        public void SetChildrensParent()
+        {
+            foreach(HtmlNode child in Children)
+            {
+                child.Parent = this;
+            }
+        }
     }
 
     class HtmlPage
