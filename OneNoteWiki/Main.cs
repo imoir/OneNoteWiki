@@ -495,85 +495,81 @@
                             {
                                 ingnoringPages = false;
                                 HtmlNode div1 = nd.Children[0];
-                                if (div1.Children.Count > 0 && div1.Children[0].Tag != null && div1.Children[0].Tag == "div")
+                                if (div1.Children.Count > 0 && div1.Children[0].Tag != null)
                                 {
-                                    HtmlNode div2 = div1.Children[0];
-                                    if (div2.Children.Count > 0 && div2.Children[0].Tag != null && div2.Children[0].Tag == "p")
+                                    // Get page name, removing any new lines
+                                    string pageName = GetContent(div1.Children[0]).Replace(System.Environment.NewLine, " ");
+                                    pageName = pageName.Replace("&nbsp;", " ").Trim();
+                                    // Remove multiple spaces
+                                    string newPageName = pageName.Replace("  ", " ");
+                                    while (newPageName != pageName)
                                     {
-                                        HtmlNode p = div2.Children[0];
-                                        // Get page name, removing any new lines
-                                        string pageName = GetContent(p).Replace(System.Environment.NewLine, " ");
-                                        // Remove multiple spaces
-                                        string newPageName = pageName.Trim().Replace("  ", " ");
-                                        while (newPageName != pageName)
+                                        pageName = newPageName;
+                                        newPageName = pageName.Replace("  ", " ");
+                                    }
+                                    // Make sure page name is not '&nbsp;'
+                                    if (pageName == "&nbsp;")
+                                    {
+                                        pageName = "";
+                                    }
+                                    // Make sure page name is not empty
+                                    if (pageName.Length == 0)
+                                    {
+                                        pageName = "PageWithNoName";
+                                    }
+                                    if (m_htmlPageList.Count == 0 || TextBoxIgnorePage.Text.Length == 0 || pageName != TextBoxIgnorePage.Text)
+                                    {
+                                        // Get filename
+                                        string pageFilename = CleanupFilename(pageName, '_');
+                                        // Make sure filename is not already used
+                                        if (m_pagesNames.Contains(pageFilename))
                                         {
+                                            string newPageFilename;
+                                            int i = 1;
+                                            do
+                                            {
+                                                newPageFilename = String.Format("{0} ({1})", pageFilename, i);
+                                                newPageName = String.Format("{0} ({1})", pageName, i);
+                                                i++;
+                                            } while (m_pagesNames.Contains(newPageFilename));
+                                            pageFilename = newPageFilename;
                                             pageName = newPageName;
-                                            newPageName = pageName.Replace("  ", " ");
                                         }
-                                        // Make sure page name is not '&nbsp;'
-                                        if (pageName == "&nbsp;")
+                                        m_pagesNames.Add(pageFilename);
+                                        HtmlPage newPage = new HtmlPage();
+                                        newPage.PageName = pageName;
+                                        newPage.PageFilename = pageFilename;
+                                        if (div1.Children.Count > 2)
                                         {
-                                            pageName = "";
+                                            newPage.PageContent = new HtmlNode();
+                                            newPage.PageContent.Tag = "page";
+                                            for (int i = 2; i < div1.Children.Count; i++)
+                                            {
+                                                newPage.PageContent.Children.Add(div1.Children[i]);
+                                                div1.Children[i] = new HtmlNode();
+                                                div1.Children[i].Tag = "ignore";
+                                            }
+                                            newPage.PageContent.SetChildrensParent();
                                         }
-                                        // Make sure page name is not empty
-                                        if (pageName.Length == 0)
+                                        if (nbspParagraphCount < 3 && m_htmlPageList.Count > 0)
                                         {
-                                            pageName = "PageWithNoName";
-                                        }
-                                        if (m_htmlPageList.Count == 0 || TextBoxIgnorePage.Text.Length == 0 || pageName != TextBoxIgnorePage.Text)
-                                        {
-                                            // Get filename
-                                            string pageFilename = CleanupFilename(pageName, '_');
-                                            // Make sure filename is not already used
-                                            if (m_pagesNames.Contains(pageFilename))
-                                            {
-                                                string newPageFilename;
-                                                int i = 1;
-                                                do
-                                                {
-                                                    newPageFilename = String.Format("{0} ({1})", pageFilename, i);
-                                                    newPageName = String.Format("{0} ({1})", pageName, i);
-                                                    i++;
-                                                } while (m_pagesNames.Contains(newPageFilename));
-                                                pageFilename = newPageFilename;
-                                                pageName = newPageName;
-                                            }
-                                            m_pagesNames.Add(pageFilename);
-                                            HtmlPage newPage = new HtmlPage();
-                                            newPage.PageName = pageName;
-                                            newPage.PageFilename = pageFilename;
-                                            if (div1.Children.Count > 2)
-                                            {
-                                                newPage.PageContent = new HtmlNode();
-                                                newPage.PageContent.Tag = "page";
-                                                for (int i = 2; i < div1.Children.Count; i++)
-                                                {
-                                                    newPage.PageContent.Children.Add(div1.Children[i]);
-                                                    div1.Children[i] = new HtmlNode();
-                                                    div1.Children[i].Tag = "ignore";
-                                                }
-                                                newPage.PageContent.SetChildrensParent();
-                                            }
-                                            if (nbspParagraphCount < 3 && m_htmlPageList.Count > 0)
-                                            {
-                                                m_htmlPageList.Last().SubPages.Add(newPage);
-                                            }
-                                            else
-                                            {
-                                                m_htmlPageList.Add(newPage);
-                                            }
+                                            m_htmlPageList.Last().SubPages.Add(newPage);
                                         }
                                         else
                                         {
-                                            // ignore this page ...
-                                            if (nbspParagraphCount > 2)
-                                            {
-                                                // ... also ignore sub pages
-                                                ingnoringPages = true;
-                                            }
+                                            m_htmlPageList.Add(newPage);
                                         }
-                                        nbspParagraphCount = 0;
                                     }
+                                    else
+                                    {
+                                        // ignore this page ...
+                                        if (nbspParagraphCount > 2)
+                                        {
+                                            // ... also ignore sub pages
+                                            ingnoringPages = true;
+                                        }
+                                    }
+                                    nbspParagraphCount = 0;
                                 }
                             }
                         }
