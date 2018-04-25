@@ -720,7 +720,7 @@
             {
                 newFilename = newFilename.Replace(c, replacement);
             }
-            string[] replaceStrings = new string[] { "&gt;", "&lt;" };
+            string[] replaceStrings = new string[] { "&quot;", "&lt;", "&gt;" };
             foreach (string s in replaceStrings)
             {
                 newFilename = newFilename.Replace(s, replacement.ToString());
